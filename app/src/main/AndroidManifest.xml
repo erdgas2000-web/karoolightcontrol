@@ -30,6 +30,10 @@
                 android:name="io.hammerhead.karooext.EXTENSION_INFO"
                 android:resource="@xml/extension_info" />
         </service>
+
+        <receiver
+            android:name=".ProfileSwitchReceiver"
+            android:exported="false" />
     </application>
 
 </manifest>

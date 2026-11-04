@@ -1,6 +1,8 @@
 package io.lightprofiles.karoo.datatypes
 
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.widget.RemoteViews
 import io.hammerhead.karooext.extension.DataTypeImpl
 import io.hammerhead.karooext.internal.Emitter
@@ -9,6 +11,7 @@ import io.hammerhead.karooext.models.DataPoint
 import io.hammerhead.karooext.models.StreamState
 import io.hammerhead.karooext.models.UpdateGraphicConfig
 import io.hammerhead.karooext.models.ViewConfig
+import io.lightprofiles.karoo.ProfileSwitchReceiver
 import io.lightprofiles.karoo.R
 import io.lightprofiles.karoo.data.Band
 import io.lightprofiles.karoo.data.LightModes
@@ -65,6 +68,7 @@ class ProfileStatusDataType(
         scope.launch {
             engine.output.collect { out ->
                 val views = RemoteViews(context.packageName, R.layout.light_status_view)
+                views.setOnClickPendingIntent(R.id.root, switchIntent(context))
                 val profile = out.profile
 
                 val top = when {
@@ -106,4 +110,16 @@ class ProfileStatusDataType(
     }
 
     private fun short(mode: String): String = LightModes.shortNameOf(mode)
+
+    /**
+     * A tap on the field steps to the next profile — if the ride page lets the
+     * touch through. karoo-ext offers nothing for this, but RemoteViews bring
+     * their own click handling, so it costs one PendingIntent to find out.
+     */
+    private fun switchIntent(context: Context): PendingIntent = PendingIntent.getBroadcast(
+        context,
+        0,
+        Intent(context, ProfileSwitchReceiver::class.java),
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+    )
 }

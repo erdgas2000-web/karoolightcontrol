@@ -9,6 +9,7 @@
     android:layout_height="match_parent"
     android:gravity="center"
     android:orientation="vertical"
+    android:id="@+id/root"
     android:padding="2dp">
 
     <TextView
