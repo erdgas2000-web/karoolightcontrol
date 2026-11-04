@@ -172,12 +172,13 @@ fun ProfileListScreen(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Text("Night below: ${settings.nightElevationDegrees}° sun elevation")
-            Slider(
-                value = settings.nightElevationDegrees.toFloat(),
-                onValueChange = { onSave(settings.copy(nightElevationDegrees = it.toInt())) },
-                valueRange = -18f..6f,
+            SettingSlider(
+                key = "night",
+                initial = settings.nightElevationDegrees,
+                range = -18f..6f,
                 steps = 23,
+                label = { "Night below: $it° sun elevation" },
+                onCommit = { onSave(settings.copy(nightElevationDegrees = it)) },
             )
         }
 
@@ -186,26 +187,29 @@ fun ProfileListScreen(
         Spacer(Modifier.height(16.dp))
 
         Text("Steadiness", style = MaterialTheme.typography.titleSmall)
-        Text("Band change needs: ${settings.bandHysteresis} past the edge")
-        Slider(
-            value = settings.bandHysteresis.toFloat(),
-            onValueChange = { onSave(settings.copy(bandHysteresis = it.toInt())) },
-            valueRange = 1f..10f,
+        SettingSlider(
+            key = "hysteresis",
+            initial = settings.bandHysteresis,
+            range = 1f..10f,
             steps = 8,
+            label = { "Band change needs: $it past the edge" },
+            onCommit = { onSave(settings.copy(bandHysteresis = it)) },
         )
-        Text("Hold a change for: ${settings.bandHoldSeconds} s")
-        Slider(
-            value = settings.bandHoldSeconds.toFloat(),
-            onValueChange = { onSave(settings.copy(bandHoldSeconds = it.toInt())) },
-            valueRange = 5f..60f,
+        SettingSlider(
+            key = "hold",
+            initial = settings.bandHoldSeconds,
+            range = 5f..60f,
             steps = 10,
+            label = { "Hold a change for: $it s" },
+            onCommit = { onSave(settings.copy(bandHoldSeconds = it)) },
         )
-        Text("Keep the radar warning for: ${settings.radarHoldSeconds} s")
-        Slider(
-            value = settings.radarHoldSeconds.toFloat(),
-            onValueChange = { onSave(settings.copy(radarHoldSeconds = it.toInt())) },
-            valueRange = 0f..60f,
+        SettingSlider(
+            key = "radarHold",
+            initial = settings.radarHoldSeconds,
+            range = 0f..60f,
             steps = 11,
+            label = { "Keep the radar warning for: $it s" },
+            onCommit = { onSave(settings.copy(radarHoldSeconds = it)) },
         )
 
         Spacer(Modifier.height(16.dp))

@@ -26,13 +26,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 import io.lightprofiles.karoo.KnownLight
 import io.lightprofiles.karoo.data.AutoActivate
 import io.lightprofiles.karoo.data.BandSource
@@ -103,9 +106,19 @@ fun ProfileEditorScreen(
             }
         }
 
+        // The field owns the text. Feeding it back from storage made the cursor
+        // jump and dropped characters, because the save is asynchronous and the
+        // value came back a keystroke late.
+        var name by remember(profile.id) { mutableStateOf(profile.name) }
+        LaunchedEffect(name) {
+            if (name != profile.name) {
+                delay(400)
+                onSave(profile.copy(name = name))
+            }
+        }
         TextField(
-            value = profile.name,
-            onValueChange = { onSave(profile.copy(name = it)) },
+            value = name,
+            onValueChange = { name = it },
             label = { Text("Profile name") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
@@ -250,34 +263,38 @@ fun ProfileEditorScreen(
             onSelect = { onSave(profile.copy(bandSource = BandSource.valueOf(it))) },
         )
         if (profile.bandSource == BandSource.SPEED) {
-            Text("Slow below ${profile.speedSlowKmh} km/h")
-            Slider(
-                value = profile.speedSlowKmh.toFloat(),
-                onValueChange = { onSave(profile.copy(speedSlowKmh = it.toInt())) },
-                valueRange = 0f..30f,
+            SettingSlider(
+                key = profile.id,
+                initial = profile.speedSlowKmh,
+                range = 0f..30f,
                 steps = 29,
+                label = { "Slow below $it km/h" },
+                onCommit = { onSave(profile.copy(speedSlowKmh = it)) },
             )
-            Text("Fast above ${profile.speedFastKmh} km/h")
-            Slider(
-                value = profile.speedFastKmh.toFloat(),
-                onValueChange = { onSave(profile.copy(speedFastKmh = it.toInt())) },
-                valueRange = 10f..60f,
+            SettingSlider(
+                key = profile.id,
+                initial = profile.speedFastKmh,
+                range = 10f..60f,
                 steps = 49,
+                label = { "Fast above $it km/h" },
+                onCommit = { onSave(profile.copy(speedFastKmh = it)) },
             )
         } else {
-            Text("Uphill from ${profile.gradeUphillPct}%")
-            Slider(
-                value = profile.gradeUphillPct.toFloat(),
-                onValueChange = { onSave(profile.copy(gradeUphillPct = it.toInt())) },
-                valueRange = 1f..15f,
+            SettingSlider(
+                key = profile.id,
+                initial = profile.gradeUphillPct,
+                range = 1f..15f,
                 steps = 13,
+                label = { "Uphill from $it%" },
+                onCommit = { onSave(profile.copy(gradeUphillPct = it)) },
             )
-            Text("Downhill from ${profile.gradeDownhillPct}%")
-            Slider(
-                value = profile.gradeDownhillPct.toFloat(),
-                onValueChange = { onSave(profile.copy(gradeDownhillPct = it.toInt())) },
-                valueRange = -15f..-1f,
+            SettingSlider(
+                key = profile.id,
+                initial = profile.gradeDownhillPct,
+                range = -15f..-1f,
                 steps = 13,
+                label = { "Downhill from $it%" },
+                onCommit = { onSave(profile.copy(gradeDownhillPct = it)) },
             )
         }
 
@@ -296,6 +313,31 @@ fun ProfileEditorScreen(
 
         Spacer(Modifier.height(24.dp))
     }
+}
+
+/**
+ * A slider that owns its position while being dragged and saves once the
+ * finger lifts. Writing every intermediate value through storage made the
+ * knob stutter and fight the drag.
+ */
+@Composable
+fun SettingSlider(
+    key: Any,
+    initial: Int,
+    range: ClosedFloatingPointRange<Float>,
+    steps: Int,
+    label: (Int) -> String,
+    onCommit: (Int) -> Unit,
+) {
+    var value by remember(key, initial) { mutableFloatStateOf(initial.toFloat()) }
+    Text(label(value.toInt()))
+    Slider(
+        value = value,
+        onValueChange = { value = it },
+        onValueChangeFinished = { onCommit(value.toInt()) },
+        valueRange = range,
+        steps = steps,
+    )
 }
 
 @Composable
