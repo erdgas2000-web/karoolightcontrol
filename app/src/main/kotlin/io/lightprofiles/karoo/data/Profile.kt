@@ -147,4 +147,20 @@ object ModeResolver {
         }
         return setup.mode
     }
+
+    /**
+     * The mode for a light Karoo knows about, under the given profile. A light
+     * the profile does not mention is off: the active profile decides for every
+     * light, otherwise one would keep whatever the previous profile left it in.
+     */
+    fun resolveFor(
+        profile: Profile?,
+        deviceId: String,
+        band: Band = Band.NORMAL,
+        radarActive: Boolean = false,
+        lightsOn: Boolean = true,
+    ): String {
+        val setup = profile?.setupFor(deviceId) ?: return "OFF"
+        return resolve(setup, band, radarActive, lightsOn)
+    }
 }

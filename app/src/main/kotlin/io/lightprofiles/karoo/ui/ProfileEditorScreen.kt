@@ -172,6 +172,7 @@ fun ProfileEditorScreen(
             }
 
             if (setup == null) {
+                Hint("Off while this profile is active.")
                 Spacer(Modifier.height(8.dp))
                 continue
             }

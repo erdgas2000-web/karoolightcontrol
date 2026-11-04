@@ -31,9 +31,11 @@ class LightEngineTest {
         val engine = LightEngine(BandController { clock }) { clock }
         val applied = mutableMapOf<String, String>()
         engine.onApply = { out ->
-            out.profile?.lights?.forEach { setup ->
-                applied[setup.deviceId] = ModeResolver.resolve(
-                    setup = setup,
+            // Mirrors the extension: every known light, under the active profile.
+            for (deviceId in listOf(front, rear)) {
+                applied[deviceId] = ModeResolver.resolveFor(
+                    profile = out.profile,
+                    deviceId = deviceId,
                     band = out.band,
                     radarActive = out.radarActive,
                     lightsOn = out.lightsOn,
@@ -195,6 +197,27 @@ class LightEngineTest {
 
         val third = engine.nextProfile()
         assertEquals("Day road", third?.name)
+        assertEquals("OFF", applied[front])
+    }
+
+    @Test
+    fun `a light left out of a profile goes off when that profile takes over`() {
+        // The day profile names only the rear light. Coming from the woods
+        // profile, the headlight must not keep burning.
+        val dayRearOnly = dayRoadProfile().let {
+            it.copy(lights = it.lights.filter { l -> l.deviceId == rear })
+        }
+        val (engine, applied) = engineFor(
+            AppSettings(
+                profiles = listOf(nightWoodsProfile(), dayRearOnly),
+                activeProfileId = "woods",
+            ),
+        )
+        engine.onRideStart()
+        assertEquals("STEADY3", applied[front])
+
+        engine.nextProfile()
+
         assertEquals("OFF", applied[front])
     }
 

@@ -84,17 +84,21 @@ class LightProfilesExtension : KarooExtension("light-profiles", BuildConfig.VERS
         engine = LightEngine()
 
         engine.onApply = { out ->
-            val profile = out.profile
-            if (profile != null) {
-                for (setup in profile.lights) {
-                    val mode = ModeResolver.resolve(
-                        setup = setup,
+            // Every known light, not just the ones the profile names: a light
+            // left out of a profile is off in that profile. Steering only the
+            // listed ones left the headlight burning from the previous profile,
+            // which reads as the setting being ignored.
+            for (light in knownDevices) {
+                send(
+                    light.id,
+                    ModeResolver.resolveFor(
+                        profile = out.profile,
+                        deviceId = light.id,
                         band = out.band,
                         radarActive = out.radarActive,
                         lightsOn = out.lightsOn,
-                    )
-                    send(setup.deviceId, mode)
-                }
+                    ),
+                )
             }
             updateStreams()
         }
