@@ -215,6 +215,34 @@ fun ProfileListScreen(
         )
 
         Spacer(Modifier.height(16.dp))
+        HorizontalDivider()
+        Spacer(Modifier.height(16.dp))
+
+        Text("Tunnels and bridges", style = MaterialTheme.typography.titleSmall)
+        Text(
+            "Set a \"When dark\" mode on a light to have it come on in the dark. " +
+                "The Karoo's own light sensor decides.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        SettingSlider(
+            key = "darkLux",
+            initial = settings.darkLuxThreshold,
+            range = 5f..200f,
+            steps = 38,
+            label = { "Dark below: $it lux" },
+            onCommit = { onSave(settings.copy(darkLuxThreshold = it)) },
+        )
+        SettingSlider(
+            key = "darkHold",
+            initial = settings.darkHoldSeconds,
+            range = 5f..60f,
+            steps = 10,
+            label = { "Stay on for: $it s after it is bright" },
+            onCommit = { onSave(settings.copy(darkHoldSeconds = it)) },
+        )
+
+        Spacer(Modifier.height(16.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,

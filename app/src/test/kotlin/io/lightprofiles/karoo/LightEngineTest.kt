@@ -10,6 +10,7 @@ import io.lightprofiles.karoo.data.ModeResolver
 import io.lightprofiles.karoo.data.Profile
 import io.lightprofiles.karoo.data.RadarBehaviour
 import io.lightprofiles.karoo.engine.BandController
+import io.lightprofiles.karoo.engine.DarkDetector
 import io.lightprofiles.karoo.engine.LightEngine
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -28,7 +29,7 @@ class LightEngineTest {
     private var clock = 1_000_000L
 
     private fun engineFor(settings: AppSettings): Pair<LightEngine, MutableMap<String, String>> {
-        val engine = LightEngine(BandController { clock }) { clock }
+        val engine = LightEngine(BandController { clock }, DarkDetector { clock }) { clock }
         val applied = mutableMapOf<String, String>()
         engine.onApply = { out ->
             // Mirrors the extension: every known light, under the active profile.
@@ -38,6 +39,7 @@ class LightEngineTest {
                     deviceId = deviceId,
                     band = out.band,
                     radarActive = out.radarActive,
+                    darkAround = out.darkAround,
                     lightsOn = out.lightsOn,
                 )
             }
@@ -198,6 +200,62 @@ class LightEngineTest {
         val third = engine.nextProfile()
         assertEquals("Day road", third?.name)
         assertEquals("OFF", applied[front])
+    }
+
+    @Test
+    fun `a tunnel brings both lights up, and they stay on briefly after`() {
+        // Day profile: front off, rear waiting for a vehicle. Both get a dark
+        // mode, so a tunnel lights them anyway.
+        val profile = dayRoadProfile().let {
+            it.copy(lights = it.lights.map { l -> l.copy(darkMode = "STEADY5") })
+        }
+        val (engine, applied) = engineFor(
+            AppSettings(
+                profiles = listOf(profile),
+                activeProfileId = "day",
+                darkLuxThreshold = 30,
+                darkHoldSeconds = 20,
+            ),
+        )
+        engine.onRideStart()
+        assertEquals("OFF", applied[front])
+        assertEquals("OFF", applied[rear])
+
+        // Into the tunnel: dark for longer than the trigger delay.
+        engine.onLux(5f)
+        clock += 2_000
+        engine.onLux(5f)
+        assertEquals("STEADY5", applied[front])
+        assertEquals("STEADY5", applied[rear])
+
+        // Out again, but not for long enough yet.
+        clock += 1_000
+        engine.onLux(500f)
+        assertEquals("STEADY5", applied[front])
+
+        clock += 21_000
+        engine.onLux(500f)
+        assertEquals("OFF", applied[front])
+        assertEquals("OFF", applied[rear])
+    }
+
+    @Test
+    fun `a vehicle in the tunnel still gets the warning`() {
+        val profile = dayRoadProfile().let {
+            it.copy(lights = it.lights.map { l -> l.copy(darkMode = "STEADY5") })
+        }
+        val (engine, applied) = engineFor(
+            AppSettings(profiles = listOf(profile), activeProfileId = "day", radarHoldSeconds = 1),
+        )
+        engine.onRideStart()
+        engine.onLux(5f)
+        clock += 2_000
+        engine.onLux(5f)
+        assertEquals("STEADY5", applied[rear])
+
+        engine.onRadarThreat(true)
+
+        assertEquals("FAST_FLASH", applied[rear])
     }
 
     @Test

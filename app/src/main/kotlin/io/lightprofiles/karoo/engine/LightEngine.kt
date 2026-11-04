@@ -24,6 +24,7 @@ import timber.log.Timber
  */
 class LightEngine(
     private val bands: BandController = BandController(),
+    private val darkness: DarkDetector = DarkDetector(),
     private val now: () -> Long = System::currentTimeMillis,
 ) {
     companion object {
@@ -35,6 +36,7 @@ class LightEngine(
         val lightsOn: Boolean,
         val band: Band = Band.NORMAL,
         val radarActive: Boolean = false,
+        val darkAround: Boolean = false,
     )
 
     var onApply: ((Output) -> Unit)? = null
@@ -55,6 +57,9 @@ class LightEngine(
 
     val band: StateFlow<Band> = bands.band
 
+    val darkAround: StateFlow<Boolean> = darkness.dark
+    val lux: StateFlow<Float> = darkness.lux
+
     private var riding = false
 
     /** Set once the rider picks a profile by hand; auto switching then waits for the next ride. */
@@ -69,6 +74,8 @@ class LightEngine(
             field = value
             bands.hysteresis = value.bandHysteresis.toDouble()
             bands.minHoldMillis = value.bandHoldSeconds * 1000L
+            darkness.thresholdLux = value.darkLuxThreshold.toFloat()
+            darkness.holdMillis = value.darkHoldSeconds * 1000L
             value.activeProfile?.let { bands.configure(it) }
             apply()
         }
@@ -107,6 +114,7 @@ class LightEngine(
         stopSunChecking()
         stopRadarHold()
         bands.reset()
+        darkness.reset()
         _radarActive.value = false
         // Without auto-off we simply stop steering and leave the lights as they
         // are, rather than reaching in once more to switch them off.
@@ -120,6 +128,15 @@ class LightEngine(
         val profile = activeProfile ?: return
         if (!profile.usesBands) return
         bands.onSample(value)
+    }
+
+    /** A reading from the Karoo's light sensor, in lux. */
+    fun onLux(value: Float) {
+        val profile = activeProfile ?: return
+        if (!profile.usesDarkness) return
+        val wasDark = darkness.dark.value
+        darkness.onLux(value)
+        if (darkness.dark.value != wasDark) apply()
     }
 
     /**
@@ -220,6 +237,7 @@ class LightEngine(
             lightsOn = lightsOn(),
             band = bands.band.value,
             radarActive = _radarActive.value,
+            darkAround = darkness.dark.value,
         )
         _output.value = out
         onApply?.invoke(out)

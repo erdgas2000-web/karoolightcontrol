@@ -222,6 +222,23 @@ fun ProfileEditorScreen(
                 }
             }
 
+            // Tunnels and bridges
+            ModeRow(
+                label = "When dark",
+                selected = setup.darkMode,
+                modes = modes,
+                allowNone = true,
+                onSelect = { mode -> updateSetup(light.id) { it.copy(darkMode = mode) } },
+                onPreview = { if (setup.darkMode.isNotEmpty()) onPreview(light.id, setup.darkMode) },
+            )
+            Hint(
+                if (setup.darkMode.isEmpty()) {
+                    "Leave empty to ignore the light sensor."
+                } else {
+                    "Comes on in tunnels and under bridges, and stays on briefly after."
+                },
+            )
+
             // Bands
             Row(
                 modifier = Modifier.fillMaxWidth(),

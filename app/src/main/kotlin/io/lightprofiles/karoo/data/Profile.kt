@@ -50,6 +50,8 @@ data class LightSetup(
     val fastMode: String = MODE_INHERIT,
     val radar: RadarBehaviour = RadarBehaviour.IGNORE,
     val radarMode: String = "FAST_FLASH",
+    /** Mode while it is dark around — a tunnel or a bridge. Empty: ignore the light sensor. */
+    val darkMode: String = MODE_INHERIT,
 ) {
     fun modeForBand(band: Band): String = when (band) {
         Band.SLOW -> slowMode
@@ -84,6 +86,10 @@ data class Profile(
     /** True when any light in this profile reacts to the radar. */
     val usesRadar: Boolean
         get() = lights.any { it.radar != RadarBehaviour.IGNORE }
+
+    /** True when any light in this profile reacts to it getting dark. */
+    val usesDarkness: Boolean
+        get() = lights.any { it.darkMode.isNotEmpty() }
 }
 
 @Serializable
@@ -98,6 +104,10 @@ data class AppSettings(
     val bandHysteresis: Int = 3,
     val bandHoldSeconds: Int = 15,
     val radarHoldSeconds: Int = 15,
+    /** Below this many lux it counts as dark. */
+    val darkLuxThreshold: Int = 30,
+    /** How long the lights stay on after it is bright again. */
+    val darkHoldSeconds: Int = 20,
     val autoOnWithRide: Boolean = true,
     val autoOffWithRide: Boolean = true,
     /**
@@ -129,17 +139,18 @@ object ModeResolver {
         setup: LightSetup,
         band: Band = Band.NORMAL,
         radarActive: Boolean = false,
+        darkAround: Boolean = false,
         lightsOn: Boolean = true,
     ): String {
         if (!lightsOn) return "OFF"
 
-        when (setup.radar) {
-            RadarBehaviour.ONLY_ON_VEHICLE ->
-                return if (radarActive) setup.radarMode else "OFF"
-            RadarBehaviour.WARN_ON_TOP ->
-                if (radarActive) return setup.radarMode
-            RadarBehaviour.IGNORE -> Unit
-        }
+        if (radarActive && setup.radar != RadarBehaviour.IGNORE) return setup.radarMode
+
+        // A tunnel beats staying dark for the radar: being seen in there matters
+        // more than the battery saved by waiting for a car.
+        if (darkAround && setup.darkMode.isNotEmpty()) return setup.darkMode
+
+        if (setup.radar == RadarBehaviour.ONLY_ON_VEHICLE) return "OFF"
 
         if (setup.bandsEnabled) {
             val bandMode = setup.modeForBand(band)
@@ -158,9 +169,10 @@ object ModeResolver {
         deviceId: String,
         band: Band = Band.NORMAL,
         radarActive: Boolean = false,
+        darkAround: Boolean = false,
         lightsOn: Boolean = true,
     ): String {
         val setup = profile?.setupFor(deviceId) ?: return "OFF"
-        return resolve(setup, band, radarActive, lightsOn)
+        return resolve(setup, band, radarActive, darkAround, lightsOn)
     }
 }

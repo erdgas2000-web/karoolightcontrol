@@ -15,6 +15,7 @@ import io.lightprofiles.karoo.data.LightModes
 import io.lightprofiles.karoo.data.ModeResolver
 import io.lightprofiles.karoo.data.SettingsStore
 import io.lightprofiles.karoo.datatypes.ProfileStatusDataType
+import io.lightprofiles.karoo.engine.AmbientLight
 import io.lightprofiles.karoo.engine.LightEngine
 import io.lightprofiles.karoo.karoo.KarooLightControl
 import kotlinx.coroutines.CoroutineScope
@@ -58,6 +59,7 @@ class LightProfilesExtension : KarooExtension("light-profiles", BuildConfig.VERS
     internal lateinit var karooSystem: KarooSystemService
     internal lateinit var lightControl: KarooLightControl
     internal lateinit var engine: LightEngine
+    private lateinit var ambientLight: AmbientLight
     internal lateinit var store: SettingsStore
 
     private val _lights = MutableStateFlow<List<KnownLight>>(emptyList())
@@ -82,6 +84,7 @@ class LightProfilesExtension : KarooExtension("light-profiles", BuildConfig.VERS
         store = SettingsStore(applicationContext)
         lightControl = KarooLightControl(applicationContext)
         engine = LightEngine()
+        ambientLight = AmbientLight(applicationContext) { lux -> engine.onLux(lux) }
 
         engine.onApply = { out ->
             // Every known light, not just the ones the profile names: a light
@@ -96,6 +99,7 @@ class LightProfilesExtension : KarooExtension("light-profiles", BuildConfig.VERS
                         deviceId = light.id,
                         band = out.band,
                         radarActive = out.radarActive,
+                        darkAround = out.darkAround,
                         lightsOn = out.lightsOn,
                     ),
                 )
@@ -248,6 +252,9 @@ class LightProfilesExtension : KarooExtension("light-profiles", BuildConfig.VERS
         val wantRadar = profile?.usesRadar == true && engine.output.value.lightsOn
         if (wantRadar) startRadar() else stopRadar()
 
+        val wantDark = profile?.usesDarkness == true && engine.output.value.lightsOn
+        if (wantDark) ambientLight.start() else ambientLight.stop()
+
         val wantBands = profile?.usesBands == true && engine.output.value.lightsOn
         val source = profile?.bandSource
         if (!wantBands || source == null) {
@@ -337,6 +344,7 @@ class LightProfilesExtension : KarooExtension("light-profiles", BuildConfig.VERS
         instance = null
         stopRadar()
         stopBands()
+        ambientLight.stop()
         engine.destroy()
         lightControl.unbind()
         karooSystem.disconnect()
