@@ -96,8 +96,8 @@ class ProfileStatusDataType(
                     }
                 }
 
-                views.setTextViewText(R.id.light_mode_text, top)
-                views.setTextViewText(R.id.light_battery_text, bottom)
+                views.setTextViewText(R.id.line_primary, top)
+                views.setTextViewText(R.id.line_secondary, bottom)
                 emitter.updateView(views)
             }
         }
