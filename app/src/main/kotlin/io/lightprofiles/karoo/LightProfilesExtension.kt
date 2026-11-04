@@ -11,6 +11,7 @@ import io.hammerhead.karooext.models.SavedDevices
 import io.hammerhead.karooext.models.StreamState
 import io.lightprofiles.karoo.data.AppSettings
 import io.lightprofiles.karoo.data.BandSource
+import io.lightprofiles.karoo.data.LightModes
 import io.lightprofiles.karoo.data.ModeResolver
 import io.lightprofiles.karoo.data.SettingsStore
 import io.lightprofiles.karoo.datatypes.ProfileStatusDataType
@@ -188,7 +189,9 @@ class LightProfilesExtension : KarooExtension("light-profiles", BuildConfig.VERS
         _lights.value = knownDevices.map { light ->
             light.copy(
                 state = lightControl.connectionStates.value[light.id],
-                supportedModes = lightControl.supportedModes.value[light.id]?.toList().orEmpty(),
+                supportedModes = LightModes.sorted(
+                    lightControl.supportedModes.value[light.id].orEmpty(),
+                ),
             )
         }
     }

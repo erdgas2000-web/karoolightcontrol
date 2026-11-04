@@ -48,6 +48,8 @@ import io.lightprofiles.karoo.data.RadarBehaviour
 /** Standard mode ids, used when a light has not reported its own list yet. */
 private val FALLBACK_MODES = listOf("OFF", "STEADY4", "STEADY5", "SLOW_FLASH", "FAST_FLASH")
 
+/** Shown while a light has not reported its own list yet. */
+
 @Composable
 fun ProfileEditorScreen(
     profile: Profile,
