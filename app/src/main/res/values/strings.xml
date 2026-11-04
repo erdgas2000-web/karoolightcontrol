@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Light Profiles</string>
+    <string name="light_status">Light Profile</string>
+    <string name="light_status_desc">Shows the active profile and what each light is doing</string>
+    <string name="next_profile">Next light profile</string>
+    <string name="toggle_lights">Toggle lights</string>
+</resources>
