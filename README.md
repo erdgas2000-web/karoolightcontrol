@@ -44,8 +44,16 @@ Typical profiles:
 
 ## Installing
 
-Share the APK from your phone to the Hammerhead Companion app, with the Karoo
-on and on Wi-Fi. Restart the Karoo if the extension does not show up.
+On your phone, long-press this link and share it to the Hammerhead Companion
+app:
+
+https://github.com/erdgas2000-web/karoolightcontrol/releases/download/v1.0/karoo-light-profiles-v1.0.apk
+
+Accept the prompt on the Karoo, which has to be on and on Wi-Fi. Share the
+**link**, not a downloaded file — the Companion app fetches the APK from the
+URL, and sharing the file itself does nothing.
+
+Restart the Karoo if the extension does not show up afterwards.
 
 The app is signed with a release key, so later versions install over it as
 updates.
