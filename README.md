@@ -54,11 +54,14 @@ updates.
 4. Optionally set the radar behaviour and the bands
 5. Back in the list, tap a profile to make it active
 
-For switching while riding, map **Next light profile** to a hardware or AXS
-button in Karoo's settings. The **Light Profile** data field shows which
-profile is active and what each light is set to — Karoo gives extensions no
-way to receive a tap on a data field, so the field reports and the button
-acts.
+For switching while riding, put the **Light Profile** data field on a ride
+page. It shows the active profile and what each light is set to, and
+**tapping it steps to the next profile**. You can also map **Next light
+profile** to a hardware or AXS button, which is easier with gloves.
+
+A light that a profile does not include is off while that profile is
+active — a profile describes the whole ride, not just the lights it
+mentions.
 
 ## Notes
 

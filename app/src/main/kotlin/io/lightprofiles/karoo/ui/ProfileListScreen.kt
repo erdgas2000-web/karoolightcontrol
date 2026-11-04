@@ -144,9 +144,10 @@ fun ProfileListScreen(
 
         Text("Switching", style = MaterialTheme.typography.titleSmall)
         Text(
-            "Map \"Next light profile\" to a hardware or AXS button to change " +
-                "profiles while riding. A data field can show which one is active, " +
-                "but Karoo does not let an extension receive taps on it.",
+            "Put the \"Light Profile\" data field on a ride page: it shows the " +
+                "active profile, and tapping it steps to the next one. For a " +
+                "glove-friendly way, map \"Next light profile\" to a hardware or " +
+                "AXS button.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

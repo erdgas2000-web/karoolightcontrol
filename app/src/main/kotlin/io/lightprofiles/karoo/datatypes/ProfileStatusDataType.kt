@@ -27,8 +27,9 @@ import kotlinx.coroutines.launch
 /**
  * Shows which profile is in force and what each light is actually set to.
  *
- * karoo-ext has no way for a data field to receive a tap, so this field only
- * reports; switching profiles is the handlebar button or the settings screen.
+ * karoo-ext documents nothing about interaction, but a RemoteViews brings its
+ * own click handling, and a tap on the ride page does reach it: tapping this
+ * field steps to the next profile.
  */
 class ProfileStatusDataType(
     private val engine: LightEngine,
