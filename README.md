@@ -14,7 +14,12 @@ Per light, a profile says three things:
 |---|---|
 | **Normal mode** | what the light does most of the time |
 | **Radar** | ignore it, warn on top of the normal mode, or stay dark and light up only when a vehicle is behind |
+| **Dark** | whether it comes on in tunnels and under bridges, using the Karoo's light sensor |
 | **Bands** | whether the mode changes with how the riding goes |
+
+Each is off unless you switch it on, so a night profile is not second-guessed
+by a tunnel detector it does not need. Precedence, strongest first: a vehicle
+behind you, then darkness, then the band, then the normal mode.
 
 The three bands are **slow / middle / fast**, following either speed or
 gradient. With gradient, uphill counts as slow and downhill as fast, so a
