@@ -26,6 +26,7 @@ import io.lightprofiles.karoo.BuildConfig
 import io.lightprofiles.karoo.KnownLight
 import io.lightprofiles.karoo.data.AppSettings
 import io.lightprofiles.karoo.data.AutoActivate
+import io.lightprofiles.karoo.data.LightModes
 import io.lightprofiles.karoo.data.Profile
 
 @Composable
@@ -249,7 +250,7 @@ private fun summaryOf(profile: Profile): String {
     if (profile.lights.isEmpty()) return "no lights set up"
     val parts = profile.lights.map { setup ->
         val role = if (setup.role == io.lightprofiles.karoo.data.LightRole.FRONT) "F" else "R"
-        "$role ${setup.mode.lowercase()}"
+        "$role ${LightModes.nameOf(setup.mode)}"
     }
     val extras = buildList {
         if (profile.usesBands) add(if (profile.bandSource == io.lightprofiles.karoo.data.BandSource.GRADE) "grade" else "speed")

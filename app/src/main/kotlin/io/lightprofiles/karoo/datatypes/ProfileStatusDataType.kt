@@ -11,6 +11,7 @@ import io.hammerhead.karooext.models.UpdateGraphicConfig
 import io.hammerhead.karooext.models.ViewConfig
 import io.lightprofiles.karoo.R
 import io.lightprofiles.karoo.data.Band
+import io.lightprofiles.karoo.data.LightModes
 import io.lightprofiles.karoo.data.LightRole
 import io.lightprofiles.karoo.data.ModeResolver
 import io.lightprofiles.karoo.engine.LightEngine
@@ -104,13 +105,5 @@ class ProfileStatusDataType(
         emitter.setCancellable { scope.cancel() }
     }
 
-    /** Mode ids are long; a data field is small. */
-    private fun short(mode: String): String = when (mode) {
-        "OFF" -> "off"
-        "SLOW_FLASH" -> "flash"
-        "FAST_FLASH" -> "FLASH"
-        "RANDOM_FLASH" -> "rnd"
-        else -> mode.removePrefix("STEADY").removePrefix("CUSTOM_MODE_").lowercase()
-            .let { if (mode.startsWith("STEADY")) "st$it" else it }
-    }
+    private fun short(mode: String): String = LightModes.shortNameOf(mode)
 }

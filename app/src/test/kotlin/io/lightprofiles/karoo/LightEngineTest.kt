@@ -118,10 +118,12 @@ class LightEngineTest {
                 front,
                 "Front",
                 LightRole.FRONT,
+                // STEADY1 is Solid Max and STEADY5 Solid Min: the levels count
+                // down from brightest, so dim on the climb is STEADY5.
                 mode = "STEADY3",
                 bandsEnabled = true,
-                slowMode = "STEADY1",
-                fastMode = "STEADY5",
+                slowMode = "STEADY5",
+                fastMode = "STEADY1",
             ),
             LightSetup(rear, "Rear", LightRole.REAR, mode = "SLOW_FLASH"),
         ),
@@ -137,15 +139,15 @@ class LightEngineTest {
         assertEquals("STEADY3", applied[front])
         assertEquals("SLOW_FLASH", applied[rear])
 
-        // 6% climb.
+        // 6% climb: dim.
         engine.onSample(6.0)
-        waitUntil { applied[front] == "STEADY1" }
+        waitUntil { applied[front] == "STEADY5" }
         assertEquals("SLOW_FLASH", applied[rear])
 
-        // Over the top and down the other side.
+        // Over the top and down the other side: full beam.
         clock += 20_000
         engine.onSample(-6.0)
-        waitUntil { applied[front] == "STEADY5" }
+        waitUntil { applied[front] == "STEADY1" }
 
         // Flat again.
         clock += 20_000
@@ -271,12 +273,12 @@ class LightEngineTest {
         engine.onRideStart()
 
         engine.onSample(6.0)
-        waitUntil { applied[front] == "STEADY1" }
+        waitUntil { applied[front] == "STEADY5" }
 
         // Straight back to flat: too soon, so the band stays put.
         engine.onSample(0.0)
         Thread.sleep(200)
-        assertEquals("STEADY1", applied[front])
+        assertEquals("STEADY5", applied[front])
 
         clock += 16_000
         engine.onSample(0.0)

@@ -39,6 +39,7 @@ import kotlinx.coroutines.delay
 import io.lightprofiles.karoo.KnownLight
 import io.lightprofiles.karoo.data.AutoActivate
 import io.lightprofiles.karoo.data.BandSource
+import io.lightprofiles.karoo.data.LightModes
 import io.lightprofiles.karoo.data.LightRole
 import io.lightprofiles.karoo.data.LightSetup
 import io.lightprofiles.karoo.data.MODE_INHERIT
@@ -434,11 +435,5 @@ private fun Dropdown(
     }
 }
 
-/** Turns an ANT+ mode id into something readable. */
-private fun prettyMode(mode: String): String = when {
-    mode.isEmpty() -> "—"
-    mode == "OFF" -> "Off"
-    mode.startsWith("STEADY") -> "Steady ${mode.removePrefix("STEADY")}"
-    mode.startsWith("CUSTOM_MODE_") -> "Custom ${mode.removePrefix("CUSTOM_MODE_")}"
-    else -> mode.lowercase().replace('_', ' ').replaceFirstChar { it.uppercase() }
-}
+/** Karoo's own wording, so a mode reads the same as in the Control Center. */
+private fun prettyMode(mode: String): String = LightModes.nameOf(mode)
