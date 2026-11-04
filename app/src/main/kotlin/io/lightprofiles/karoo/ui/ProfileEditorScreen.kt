@@ -223,21 +223,31 @@ fun ProfileEditorScreen(
             }
 
             // Tunnels and bridges
-            ModeRow(
-                label = "When dark",
-                selected = setup.darkMode,
-                modes = modes,
-                allowNone = true,
-                onSelect = { mode -> updateSetup(light.id) { it.copy(darkMode = mode) } },
-                onPreview = { if (setup.darkMode.isNotEmpty()) onPreview(light.id, setup.darkMode) },
-            )
-            Hint(
-                if (setup.darkMode.isEmpty()) {
-                    "Leave empty to ignore the light sensor."
-                } else {
-                    "Comes on in tunnels and under bridges, and stays on briefly after."
-                },
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("Come on in the dark", Modifier.weight(1f))
+                Switch(
+                    checked = setup.darkMode.isNotEmpty(),
+                    onCheckedChange = { on ->
+                        updateSetup(light.id) {
+                            it.copy(darkMode = if (on) dimmestOf(modes) else MODE_INHERIT)
+                        }
+                    },
+                )
+            }
+            if (setup.darkMode.isNotEmpty()) {
+                ModeRow(
+                    label = "When dark",
+                    selected = setup.darkMode,
+                    modes = modes,
+                    onSelect = { mode -> updateSetup(light.id) { it.copy(darkMode = mode) } },
+                    onPreview = { onPreview(light.id, setup.darkMode) },
+                )
+                Hint("Tunnels and bridges. Stays on briefly after it is bright again.")
+            }
 
             // Bands
             Row(
@@ -286,6 +296,30 @@ fun ProfileEditorScreen(
         HorizontalDivider()
         Spacer(Modifier.height(12.dp))
 
+        // Only worth showing once a light in this profile actually uses them.
+        if (profile.usesBands) {
+            BandSettings(profile, onSave)
+        }
+
+        Dropdown(
+            label = "Pick automatically",
+            selected = profile.autoActivate.name,
+            options = listOf(
+                "NEVER" to "Never",
+                "DAY" to "In daylight",
+                "NIGHT" to "After dark",
+            ),
+            onSelect = { onSave(profile.copy(autoActivate = AutoActivate.valueOf(it))) },
+        )
+        Hint("Only applies when \"Switch profile by sun\" is on in the profile list.")
+
+        Spacer(Modifier.height(24.dp))
+    }
+}
+
+@Composable
+private fun BandSettings(profile: Profile, onSave: (Profile) -> Unit) {
+    Column {
         Text("Bands follow", style = MaterialTheme.typography.titleSmall)
         Dropdown(
             label = "Source",
@@ -328,21 +362,7 @@ fun ProfileEditorScreen(
                 onCommit = { onSave(profile.copy(gradeDownhillPct = it)) },
             )
         }
-
         Spacer(Modifier.height(12.dp))
-        Dropdown(
-            label = "Pick automatically",
-            selected = profile.autoActivate.name,
-            options = listOf(
-                "NEVER" to "Never",
-                "DAY" to "In daylight",
-                "NIGHT" to "After dark",
-            ),
-            onSelect = { onSave(profile.copy(autoActivate = AutoActivate.valueOf(it))) },
-        )
-        Hint("Only applies when \"Switch profile by sun\" is on in the profile list.")
-
-        Spacer(Modifier.height(24.dp))
     }
 }
 
@@ -370,6 +390,12 @@ fun SettingSlider(
         steps = steps,
     )
 }
+
+/** The dimmest steady level a light offers, as a sensible default for a tunnel. */
+private fun dimmestOf(modes: List<String>): String =
+    modes.lastOrNull { it.startsWith("STEADY") }
+        ?: modes.firstOrNull { it != "OFF" }
+        ?: "OFF"
 
 @Composable
 private fun Hint(text: String) {
