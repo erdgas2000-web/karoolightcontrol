@@ -31,8 +31,8 @@ data class KnownLight(
     val id: String,
     val name: String,
     val manufacturer: String? = null,
-    /** Null when Karoo has not reported a state for it yet. */
-    val connected: Boolean? = null,
+    /** What SensorService reports: CONNECTED, SEARCHING, NOT_AVAILABLE … or null when it has said nothing yet. */
+    val state: String? = null,
     val supportedModes: List<String> = emptyList(),
 )
 
@@ -187,7 +187,7 @@ class LightProfilesExtension : KarooExtension("light-profiles", BuildConfig.VERS
     private fun refreshLights() {
         _lights.value = knownDevices.map { light ->
             light.copy(
-                connected = lightControl.connectionOf(light.id),
+                state = lightControl.connectionStates.value[light.id],
                 supportedModes = lightControl.supportedModes.value[light.id]?.toList().orEmpty(),
             )
         }

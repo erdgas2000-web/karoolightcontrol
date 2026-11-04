@@ -60,11 +60,9 @@ fun ProfileListScreen(
             Spacer(Modifier.height(12.dp))
         } else {
             for (light in lights) {
-                val status = when (light.connected) {
-                    true -> "connected"
-                    false -> "not found"
-                    null -> "no status"
-                }
+                // Karoo's own word for it, not a guess: searching is not the same
+                // as not there, and saying so wrongly costs an evening of hunting.
+                val status = light.state?.lowercase()?.replace('_', ' ') ?: "no status yet"
                 val modes = if (light.supportedModes.isEmpty()) {
                     ""
                     } else {

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- No action bar: the Karoo screen is small and the app draws its own title. -->
+    <style name="Theme.LightProfiles" parent="@android:style/Theme.DeviceDefault.NoActionBar" />
+</resources>
