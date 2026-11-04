@@ -139,6 +139,14 @@ fun ProfileEditorScreen(
         for (light in lights) {
             val setup = profile.setupFor(light.id)
             val modes = light.supportedModes.ifEmpty { FALLBACK_MODES }
+            val modeNote = when {
+                light.supportedModes.isEmpty() ->
+                    "This light has not said what it can do. Standard modes shown — " +
+                        "switch it on to get its own list."
+                light.modesAreRemembered ->
+                    "Modes it reported earlier; it is not awake right now."
+                else -> null
+            }
 
             HorizontalDivider()
             Spacer(Modifier.height(8.dp))
@@ -175,6 +183,8 @@ fun ProfileEditorScreen(
                     updateSetup(light.id) { it.copy(role = LightRole.valueOf(value)) }
                 },
             )
+
+            if (modeNote != null) Hint(modeNote)
 
             ModeRow(
                 label = "Normal",

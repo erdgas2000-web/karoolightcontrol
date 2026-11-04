@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.lifecycleScope
@@ -14,7 +15,6 @@ import io.lightprofiles.karoo.data.SettingsStore
 import io.lightprofiles.karoo.ui.LightProfilesTheme
 import io.lightprofiles.karoo.ui.ProfileEditorScreen
 import io.lightprofiles.karoo.ui.ProfileListScreen
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -28,10 +28,15 @@ class MainActivity : ComponentActivity() {
         setContent {
         LightProfilesTheme {
             val settings by store.flow.collectAsState(initial = AppSettings())
-            val lights by (
-                LightProfilesExtension.getInstance()?.lights
-                    ?: remember { MutableStateFlow(emptyList<KnownLight>()) }
-                ).collectAsState()
+            // The extension service may not exist yet when this first composes.
+            // Keying on it restarts the collection once it does; the previous
+            // version called remember() only on the null branch, which changes
+            // the slot structure between compositions and left the screen stuck
+            // on the empty first value even after the lights were known.
+            val extension = LightProfilesExtension.getInstance()
+            val lights by produceState(initialValue = emptyList<KnownLight>(), extension) {
+                extension?.lights?.collect { value = it }
+            }
 
             var editingProfileId by remember { mutableStateOf<String?>(null) }
 

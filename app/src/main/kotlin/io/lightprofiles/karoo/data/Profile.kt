@@ -100,6 +100,12 @@ data class AppSettings(
     val radarHoldSeconds: Int = 15,
     val autoOnWithRide: Boolean = true,
     val autoOffWithRide: Boolean = true,
+    /**
+     * The modes each light last reported, kept so the editor still offers them
+     * when the light is asleep. A light only reports while it is awake, and
+     * these lists are the difference between editing a profile and guessing.
+     */
+    val knownModes: Map<String, List<String>> = emptyMap(),
 ) {
     val activeProfile: Profile?
         get() = profiles.find { it.id == activeProfileId } ?: profiles.firstOrNull()

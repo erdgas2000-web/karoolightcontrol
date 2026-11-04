@@ -35,6 +35,8 @@ data class KnownLight(
     /** What SensorService reports: CONNECTED, SEARCHING, NOT_AVAILABLE … or null when it has said nothing yet. */
     val state: String? = null,
     val supportedModes: List<String> = emptyList(),
+    /** True when the list is what the light said last time, not right now. */
+    val modesAreRemembered: Boolean = false,
 )
 
 class LightProfilesExtension : KarooExtension("light-profiles", BuildConfig.VERSION_NAME) {
@@ -134,7 +136,10 @@ class LightProfilesExtension : KarooExtension("light-profiles", BuildConfig.VERS
             }
         }
         scope.launch {
-            lightControl.supportedModes.collect { refreshLights() }
+            lightControl.supportedModes.collect { live ->
+                refreshLights()
+                rememberModes(live)
+            }
         }
         scope.launch {
             lightControl.connectionStates.collect { refreshLights() }
@@ -185,13 +190,37 @@ class LightProfilesExtension : KarooExtension("light-profiles", BuildConfig.VERS
         refreshLights()
     }
 
+    /**
+     * Keep what a light told us about itself. It only reports while awake, and
+     * many lights sleep as soon as they are switched off — without this the
+     * editor forgets the mode list on every restart and offers a generic one.
+     */
+    private suspend fun rememberModes(live: Map<String, Set<String>>) {
+        val stored = engine.settings.knownModes
+        val merged = stored.toMutableMap()
+        var changed = false
+        for ((id, modes) in live) {
+            if (modes.isEmpty()) continue
+            val sorted = LightModes.sorted(modes)
+            if (stored[id] != sorted) {
+                merged[id] = sorted
+                changed = true
+            }
+        }
+        if (changed) {
+            Timber.d("$TAG: remembering modes ${merged.mapValues { it.value.size }}")
+            store.update(engine.settings.copy(knownModes = merged))
+        }
+    }
+
     private fun refreshLights() {
         _lights.value = knownDevices.map { light ->
+            val live = lightControl.supportedModes.value[light.id].orEmpty()
+            val remembered = engine.settings.knownModes[light.id].orEmpty()
             light.copy(
                 state = lightControl.connectionStates.value[light.id],
-                supportedModes = LightModes.sorted(
-                    lightControl.supportedModes.value[light.id].orEmpty(),
-                ),
+                supportedModes = if (live.isNotEmpty()) LightModes.sorted(live) else remembered,
+                modesAreRemembered = live.isEmpty() && remembered.isNotEmpty(),
             )
         }
     }
